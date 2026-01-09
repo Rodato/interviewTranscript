@@ -23,6 +23,10 @@ class Config:
         "2": {
             "name": "gpt-4o-mini-transcribe", 
             "display_name": "GPT-4O Mini Transcribe (Modelo económico)"
+        },
+        "3": {
+            "name": "gpt-4o-transcribe-diarize",
+            "display_name": "GPT-4O Transcribe Diarization (Separación de hablantes)"
         }
     }
     

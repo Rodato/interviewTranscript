@@ -34,14 +34,22 @@ The project requires the following environment variables in `.env`:
 ## Audio Processing Features
 
 - **Multi-format support**: M4A, MP3, WAV, FLAC, AAC, OGG, MP4
-- **Automatic chunking**: Files larger than 20MB are automatically split into chunks
+- **Automatic chunking**: Files larger than 20MB or 20 minutes are automatically split into chunks
 - **Smart splitting**: Avoids cutting mid-sentence by finding silence points
 - **Chunk transcription**: Each chunk is transcribed separately and combined
+- **Speaker diarization**: GPT-4O Transcribe Diarization model separates speakers with timestamps
+
+## Available Models
+
+- **gpt-4o-transcribe**: Standard transcription model (high quality)
+- **gpt-4o-mini-transcribe**: Economic transcription model (lower cost)
+- **gpt-4o-transcribe-diarize**: Speaker diarization model (separates speakers with timestamps)
 
 ## Known Limitations
 
 - OpenAI API has a 25MB file size limit (handled automatically)
 - Large files may take several minutes to process due to chunking
+- Diarization model requires files longer than 30 seconds
 - Requires ffmpeg for audio processing
 
 ## Security

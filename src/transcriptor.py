@@ -21,12 +21,12 @@ def main():
         print(f"   {key}. {model_info['display_name']}")
     
     while True:
-        choice = input("\nSelecciona modelo (1-2): ").strip()
+        choice = input("\nSelecciona modelo (1-3): ").strip()
         if choice in Config.AVAILABLE_MODELS:
             selected_model = Config.AVAILABLE_MODELS[choice]["name"]
             model_display = Config.AVAILABLE_MODELS[choice]["display_name"]
             break
-        print("❌ Opción inválida. Selecciona 1 o 2.")
+        print("❌ Opción inválida. Selecciona 1, 2 o 3.")
     
     print(f"✅ Usando: {model_display}")
     
@@ -56,7 +56,12 @@ def main():
                 print(f"   📄 Archivo: {info}")
                 
                 # Verificar si ya existe transcripción (con sufijo del modelo)
-                model_suffix = "_mini" if "mini" in selected_model else "_standard"
+                if "mini" in selected_model:
+                    model_suffix = "_mini"
+                elif "diarize" in selected_model:
+                    model_suffix = "_diarization"
+                else:
+                    model_suffix = "_standard"
                 output_path = audio_processor.get_output_path(audio_file).with_name(
                     audio_processor.get_output_path(audio_file).stem + model_suffix + ".txt"
                 )

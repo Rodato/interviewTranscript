@@ -21,13 +21,36 @@ class OpenAITranscriptionService:
                 raise Exception(f"Archivo muy grande ({file_size_mb:.1f}MB). Máximo permitido: {Config.MAX_FILE_SIZE_MB}MB")
             
             with open(audio_file_path, "rb") as audio_file:
-                transcript = self.client.audio.transcriptions.create(
-                    model=selected_model,
-                    file=audio_file,
-                    response_format=Config.WHISPER_RESPONSE_FORMAT
-                )
+                # Configurar parámetros según el modelo
+                params = {
+                    "model": selected_model,
+                    "file": audio_file,
+                    "response_format": Config.WHISPER_RESPONSE_FORMAT
+                }
+                
+                # Para modelos de diarización, añadir chunking_strategy y response_format
+                if "diarize" in selected_model:
+                    params["chunking_strategy"] = "auto"
+                    params["response_format"] = "diarized_json"
+                
+                transcript = self.client.audio.transcriptions.create(**params)
             
-            return transcript.text if hasattr(transcript, 'text') else transcript
+            # Manejar diferentes formatos de respuesta
+            if "diarize" in selected_model:
+                # Para diarización, formatear los segmentos
+                if hasattr(transcript, 'segments'):
+                    formatted_text = []
+                    for segment in transcript.segments:
+                        speaker = getattr(segment, 'speaker', 'Unknown')
+                        text = getattr(segment, 'text', '')
+                        start = getattr(segment, 'start', 0)
+                        end = getattr(segment, 'end', 0)
+                        formatted_text.append(f"[{speaker}] ({start:.1f}s-{end:.1f}s): {text}")
+                    return '\n'.join(formatted_text)
+                else:
+                    return str(transcript)
+            else:
+                return transcript.text if hasattr(transcript, 'text') else transcript
             
         except Exception as e:
             raise Exception(f"Error en transcripción: {str(e)}")
