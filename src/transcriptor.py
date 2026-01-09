@@ -8,11 +8,27 @@ import sys
 from pathlib import Path
 from audio_processor import AudioProcessor
 from openai_service import OpenAITranscriptionService
+from config import Config
 
 def main():
     """Función principal del transcriptor"""
-    print("🎤 Transcriptor de Audio - OpenAI Whisper")
+    print("🎤 Transcriptor de Audio - OpenAI")
     print("=" * 50)
+    
+    # Seleccionar modelo
+    print("Modelos disponibles:")
+    for key, model_info in Config.AVAILABLE_MODELS.items():
+        print(f"   {key}. {model_info['display_name']}")
+    
+    while True:
+        choice = input("\nSelecciona modelo (1-2): ").strip()
+        if choice in Config.AVAILABLE_MODELS:
+            selected_model = Config.AVAILABLE_MODELS[choice]["name"]
+            model_display = Config.AVAILABLE_MODELS[choice]["display_name"]
+            break
+        print("❌ Opción inválida. Selecciona 1 o 2.")
+    
+    print(f"✅ Usando: {model_display}")
     
     try:
         # Inicializar componentes
@@ -23,7 +39,7 @@ def main():
         audio_files = audio_processor.get_audio_files()
         
         if not audio_files:
-            print("❌ No se encontraron archivos M4A en el directorio 'mp3'")
+            print("❌ No se encontraron archivos de audio en el directorio 'mp3'")
             return
         
         print(f"📁 Encontrados {len(audio_files)} archivo(s) de audio:")
@@ -39,8 +55,11 @@ def main():
                 prepared_file, info = audio_processor.prepare_for_transcription(audio_file)
                 print(f"   📄 Archivo: {info}")
                 
-                # Verificar si ya existe transcripción
-                output_path = audio_processor.get_output_path(audio_file)
+                # Verificar si ya existe transcripción (con sufijo del modelo)
+                model_suffix = "_mini" if "mini" in selected_model else "_standard"
+                output_path = audio_processor.get_output_path(audio_file).with_name(
+                    audio_processor.get_output_path(audio_file).stem + model_suffix + ".txt"
+                )
                 if output_path.exists():
                     print(f"   ⚠️  Ya existe transcripción: {output_path.name}")
                     continue
@@ -50,16 +69,16 @@ def main():
                 
                 if len(chunk_paths) == 1:
                     # Archivo pequeño, transcripción directa
-                    print("   🤖 Enviando a OpenAI Whisper...")
-                    transcription = transcription_service.transcribe_audio(chunk_paths[0])
+                    print(f"   🤖 Enviando a {model_display}...")
+                    transcription = transcription_service.transcribe_audio(chunk_paths[0], model=selected_model)
                 else:
                     # Archivo grande, transcribir por chunks
-                    print(f"   🤖 Transcribiendo {len(chunk_paths)} chunks...")
+                    print(f"   🤖 Transcribiendo {len(chunk_paths)} chunks con {model_display}...")
                     transcriptions = []
                     
                     for i, chunk_path in enumerate(chunk_paths, 1):
                         print(f"      🔄 Chunk {i}/{len(chunk_paths)}")
-                        chunk_transcription = transcription_service.transcribe_audio(chunk_path)
+                        chunk_transcription = transcription_service.transcribe_audio(chunk_path, model=selected_model)
                         transcriptions.append(chunk_transcription)
                     
                     # Combinar transcripciones

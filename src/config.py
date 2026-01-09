@@ -15,6 +15,18 @@ class Config:
     OUTPUT_DIR = os.path.join(BASE_DIR, 'outputs')
     
     # Configuración de OpenAI Transcription
+    AVAILABLE_MODELS = {
+        "1": {
+            "name": "gpt-4o-transcribe",
+            "display_name": "GPT-4O Transcribe (Modelo principal)"
+        },
+        "2": {
+            "name": "gpt-4o-mini-transcribe", 
+            "display_name": "GPT-4O Mini Transcribe (Modelo económico)"
+        }
+    }
+    
+    # Modelo por defecto
     WHISPER_MODEL = "gpt-4o-transcribe"
     WHISPER_RESPONSE_FORMAT = "text"
     

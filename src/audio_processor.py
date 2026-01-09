@@ -41,22 +41,41 @@ class AudioProcessor:
         except Exception as e:
             raise Exception(f"Error preparando audio {file_path}: {str(e)}")
     
-    def split_large_audio(self, file_path, max_size_mb=20):
-        """Divide archivos de audio grandes en chunks más pequeños"""
+    def split_large_audio(self, file_path, max_size_mb=20, max_duration_sec=1300):
+        """Divide archivos de audio grandes en chunks más pequeños por tamaño Y duración"""
         try:
             file_size_mb = Path(file_path).stat().st_size / (1024 * 1024)
             
-            if file_size_mb <= max_size_mb:
-                return [str(file_path)]  # No necesita división
-            
-            print(f"   📂 Dividiendo archivo de {file_size_mb:.1f}MB en chunks de ~{max_size_mb}MB")
-            
-            # Cargar audio
+            # Cargar audio para verificar duración
             audio = AudioSegment.from_file(str(file_path))
+            duration_sec = len(audio) / 1000.0
             duration_ms = len(audio)
             
-            # Calcular duración por chunk (basado en tamaño)
-            chunk_duration_ms = int((max_size_mb / file_size_mb) * duration_ms * 0.8)  # 80% para seguridad
+            # Verificar si necesita división por tamaño O duración
+            needs_split_size = file_size_mb > max_size_mb
+            needs_split_duration = duration_sec > max_duration_sec
+            
+            if not needs_split_size and not needs_split_duration:
+                return [str(file_path)]  # No necesita división
+            
+            # Mostrar razón de división
+            if needs_split_size and needs_split_duration:
+                print(f"   📂 Dividiendo archivo de {file_size_mb:.1f}MB ({duration_sec/60:.1f} min) - excede límites de tamaño y duración")
+            elif needs_split_size:
+                print(f"   📂 Dividiendo archivo de {file_size_mb:.1f}MB en chunks de ~{max_size_mb}MB")
+            else:
+                print(f"   📂 Dividiendo archivo de {duration_sec/60:.1f} min en chunks de ~{max_duration_sec/60:.1f} min")
+            
+            # Calcular duración por chunk considerando ambos límites
+            max_chunk_duration_ms = max_duration_sec * 1000  # Convertir a ms
+            
+            if needs_split_size:
+                # Si es por tamaño, calcular duración basada en proporción
+                chunk_duration_by_size = int((max_size_mb / file_size_mb) * duration_ms * 0.8)
+                chunk_duration_ms = min(chunk_duration_by_size, max_chunk_duration_ms)
+            else:
+                # Si es solo por duración
+                chunk_duration_ms = max_chunk_duration_ms
             
             # Crear directorio temporal para chunks
             temp_dir = tempfile.mkdtemp()
@@ -82,12 +101,14 @@ class AudioProcessor:
                             break
                 
                 chunk = audio[start:end]
+                chunk_duration_min = (end-start) / 60000
+                
                 # Usar formato que OpenAI soporta bien
                 chunk_path = f"{temp_dir}/chunk_{chunk_num:03d}.mp3"
                 chunk.export(chunk_path, format="mp3", bitrate="128k")
                 chunk_paths.append(chunk_path)
                 
-                print(f"      • Chunk {chunk_num}: {(end-start)/60000:.1f} min")
+                print(f"      • Chunk {chunk_num}: {chunk_duration_min:.1f} min")
                 
                 start = end
                 chunk_num += 1

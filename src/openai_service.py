@@ -9,9 +9,12 @@ class OpenAITranscriptionService:
         
         self.client = OpenAI()
         
-    def transcribe_audio(self, audio_file_path):
-        """Transcribe un archivo de audio usando OpenAI Whisper"""
+    def transcribe_audio(self, audio_file_path, model=None):
+        """Transcribe un archivo de audio usando OpenAI"""
         try:
+            # Usar modelo específico o el por defecto
+            selected_model = model if model else Config.WHISPER_MODEL
+            
             # Verificar tamaño del archivo
             file_size_mb = Path(audio_file_path).stat().st_size / (1024 * 1024)
             if file_size_mb > Config.MAX_FILE_SIZE_MB:
@@ -19,7 +22,7 @@ class OpenAITranscriptionService:
             
             with open(audio_file_path, "rb") as audio_file:
                 transcript = self.client.audio.transcriptions.create(
-                    model=Config.WHISPER_MODEL,
+                    model=selected_model,
                     file=audio_file,
                     response_format=Config.WHISPER_RESPONSE_FORMAT
                 )
