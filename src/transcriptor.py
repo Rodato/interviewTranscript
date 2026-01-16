@@ -14,21 +14,27 @@ def main():
     """Función principal del transcriptor"""
     print("🎤 Transcriptor de Audio - OpenAI")
     print("=" * 50)
-    
-    # Seleccionar modelo
-    print("Modelos disponibles:")
-    for key, model_info in Config.AVAILABLE_MODELS.items():
-        print(f"   {key}. {model_info['display_name']}")
-    
-    while True:
-        choice = input("\nSelecciona modelo (1-3): ").strip()
-        if choice in Config.AVAILABLE_MODELS:
-            selected_model = Config.AVAILABLE_MODELS[choice]["name"]
-            model_display = Config.AVAILABLE_MODELS[choice]["display_name"]
-            break
-        print("❌ Opción inválida. Selecciona 1, 2 o 3.")
-    
-    print(f"✅ Usando: {model_display}")
+
+    # Verificar si se pasó modelo por argumento
+    if len(sys.argv) > 1 and sys.argv[1] in Config.AVAILABLE_MODELS:
+        choice = sys.argv[1]
+        selected_model = Config.AVAILABLE_MODELS[choice]["name"]
+        model_display = Config.AVAILABLE_MODELS[choice]["display_name"]
+        print(f"✅ Usando modelo: {model_display}")
+    else:
+        # Seleccionar modelo interactivamente
+        print("Modelos disponibles:")
+        for key, model_info in Config.AVAILABLE_MODELS.items():
+            print(f"   {key}. {model_info['display_name']}")
+
+        while True:
+            choice = input("\nSelecciona modelo (1-3): ").strip()
+            if choice in Config.AVAILABLE_MODELS:
+                selected_model = Config.AVAILABLE_MODELS[choice]["name"]
+                model_display = Config.AVAILABLE_MODELS[choice]["display_name"]
+                break
+            print("❌ Opción inválida. Selecciona 1, 2 o 3.")
+        print(f"✅ Usando: {model_display}")
     
     try:
         # Inicializar componentes
