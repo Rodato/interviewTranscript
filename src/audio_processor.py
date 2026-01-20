@@ -36,7 +36,16 @@ class AudioProcessor:
             is_valid, info = self.validate_audio_file(file_path)
             if not is_valid:
                 raise Exception(f"Archivo de audio inválido: {info}")
-            
+
+            # Convertir AAC a MP3 (OpenAI no soporta AAC directamente)
+            if Path(file_path).suffix.lower() == '.aac':
+                print(f"   🔄 Convirtiendo AAC a MP3...")
+                audio = AudioSegment.from_file(str(file_path), format="aac")
+                temp_dir = tempfile.mkdtemp()
+                mp3_path = f"{temp_dir}/{Path(file_path).stem}.mp3"
+                audio.export(mp3_path, format="mp3", bitrate="192k")
+                return mp3_path, info  # Retorna path convertido
+
             return str(file_path), info  # Retorna path e info
         except Exception as e:
             raise Exception(f"Error preparando audio {file_path}: {str(e)}")
