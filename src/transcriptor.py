@@ -10,8 +10,76 @@ from audio_processor import AudioProcessor
 from openai_service import OpenAITranscriptionService
 from config import Config
 
+
+def improve_diarization(base_name: str = None):
+    """Mejora la diarización combinando standard + diarization con GPT-4o"""
+    from post_processor import DiarizationImprover
+
+    print("🔧 Mejora de Diarización")
+    print("=" * 50)
+
+    try:
+        improver = DiarizationImprover()
+
+        if base_name:
+            # Procesar archivo específico
+            print(f"📁 Procesando: {base_name}")
+            output_path = improver.process_files(base_name)
+            print(f"   ✅ Guardado: {Path(output_path).name}")
+        else:
+            # Listar archivos disponibles para mejorar
+            improvable = improver.list_improvable_files()
+
+            if not improvable:
+                print("❌ No hay archivos para mejorar.")
+                print("   Se necesitan ambos: *_standard.txt y *_diarization.txt")
+                return
+
+            print(f"📋 Archivos disponibles para mejorar:")
+            for i, name in enumerate(improvable, 1):
+                print(f"   {i}. {name}")
+
+            # Selección interactiva
+            while True:
+                choice = input("\nSelecciona archivo (número) o 'all' para todos: ").strip()
+
+                if choice.lower() == 'all':
+                    for name in improvable:
+                        print(f"\n🔄 Procesando: {name}")
+                        output_path = improver.process_files(name)
+                        print(f"   ✅ Guardado: {Path(output_path).name}")
+                    break
+                elif choice.isdigit() and 1 <= int(choice) <= len(improvable):
+                    name = improvable[int(choice) - 1]
+                    print(f"\n🔄 Procesando: {name}")
+                    output_path = improver.process_files(name)
+                    print(f"   ✅ Guardado: {Path(output_path).name}")
+                    break
+                else:
+                    print("❌ Opción inválida")
+
+        print(f"\n🎉 Proceso completado!")
+
+    except FileNotFoundError as e:
+        print(f"❌ {e}")
+        sys.exit(1)
+    except FileExistsError as e:
+        print(f"⚠️  {e}")
+        sys.exit(1)
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        sys.exit(1)
+
+
 def main():
     """Función principal del transcriptor"""
+
+    # Manejar argumento --improve para mejorar diarización
+    if len(sys.argv) > 1 and sys.argv[1] == "--improve":
+        base_name = sys.argv[2] if len(sys.argv) > 2 else None
+        improve_diarization(base_name)
+        return
+
     print("🎤 Transcriptor de Audio - OpenAI")
     print("=" * 50)
 
