@@ -106,56 +106,10 @@ This project includes Claude Code hooks (`.claude/claude-hooks.js`) that prevent
 - Audio file transcription (M4A format support)
 - Multiple LLM provider support (OpenRouter, OpenAI)
 
-## VPS Remoto (Hostinger)
+## VPS y Credenciales
 
-**Conexión SSH**: `root@72.62.138.164`
-
-**Rutas importantes**:
-- Código en VPS: `/root/transcriptor/`
-- Outputs en VPS: `/root/transcriptor/outputs/`
-- Audios a procesar: `/root/transcriptor/mp3/`
-
-**Comandos útiles**:
-```bash
-# Migrar transcripciones del VPS a local
-rsync -avz root@72.62.138.164:/root/transcriptor/outputs/ /Users/daniel/Desktop/Dev/transcriptor/outputs/
-
-# Subir audios al VPS
-rsync -avz /Users/daniel/Desktop/Dev/transcriptor/mp3/ root@72.62.138.164:/root/transcriptor/mp3/
-
-# Conectar al VPS
-ssh root@72.62.138.164
-
-# Verificar si hay procesos de transcripción corriendo
-ps aux | grep python
-```
-
-**Gestión de Screen**:
-```bash
-# Listar screens activas
-screen -ls
-
-# Eliminar una screen específica (reemplazar ID)
-screen -X -S <ID>.transcriptor quit
-
-# Crear nueva screen
-screen -S transcriptor
-
-# Reconectar a screen existente
-screen -r transcriptor
-
-# Salir de screen sin detener el proceso: Ctrl+A, luego D
-```
-
-**Notificaciones Telegram**:
-- Bot: @transcriptor_not_bot
-- Token: `8225868235:AAGVM_M82WePZUiqWEFYiWaMM-YXlPDhPTM`
-- Chat ID: `94135603`
-
-```bash
-# Ejecutar transcriptor con notificación (éxito o error)
-cd /root/transcriptor && venv/bin/python src/transcriptor.py && curl -s "https://api.telegram.org/bot8225868235:AAGVM_M82WePZUiqWEFYiWaMM-YXlPDhPTM/sendMessage" -d "chat_id=94135603" -d "text=✅ Transcripción completada" || curl -s "https://api.telegram.org/bot8225868235:AAGVM_M82WePZUiqWEFYiWaMM-YXlPDhPTM/sendMessage" -d "chat_id=94135603" -d "text=❌ Error en transcripción"
-
-# Test de notificación Telegram
-curl -s "https://api.telegram.org/bot8225868235:AAGVM_M82WePZUiqWEFYiWaMM-YXlPDhPTM/sendMessage" -d "chat_id=94135603" -d "text=🔔 Test"
-```
+Ver `PRIVATE.md` (no se sube a GitHub) para:
+- Conexión SSH al VPS
+- Comandos de sincronización
+- Gestión de Screen
+- Notificaciones Telegram
