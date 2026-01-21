@@ -9,7 +9,12 @@ This is a transcriptor project that processes audio files (.m4a format) and gene
 ## Project Structure
 
 - `mp3/` - Contains input audio files (supports .m4a format)
-- `src/` - Source code directory (currently empty, ready for implementation)
+- `src/` - Source code directory
+  - `transcriptor.py` - Main entry point
+  - `audio_processor.py` - Audio file handling and chunking
+  - `openai_service.py` - OpenAI API integration
+  - `post_processor.py` - Diarization improvement with GPT-4o
+  - `config.py` - Configuration and environment variables
 - `outputs/` - Generated transcription outputs
 - `.env` - Environment configuration with API keys and service URLs
 
@@ -45,6 +50,46 @@ The project requires the following environment variables in `.env`:
 - **gpt-4o-mini-transcribe**: Economic transcription model (lower cost)
 - **gpt-4o-transcribe-diarize**: Speaker diarization model (separates speakers with timestamps)
 
+## Diarization Improvement (Post-processing)
+
+The diarization model produces fragmented text with timestamps. The `--improve` feature combines:
+- **Standard transcription**: High quality, fluid text (but no speakers)
+- **Diarization transcription**: Speaker labels [A], [B] with timestamps (but fragmented)
+
+Result: Coherent paragraphs per speaker with timestamps.
+
+### Usage
+
+```bash
+# Improve specific file (requires both _standard.txt and _diarization.txt)
+venv/bin/python src/transcriptor.py --improve "Entrevista Claudia"
+
+# Interactive mode (lists available files)
+venv/bin/python src/transcriptor.py --improve
+```
+
+### Output Files
+
+- `outputs/archivo_standard.txt` - Standard transcription
+- `outputs/archivo_diarization.txt` - Diarized transcription (fragmented)
+- `outputs/archivo_diarization_improved.txt` - Improved version (combined)
+
+### Example
+
+**Before (diarization):**
+```
+[A] (60.8s-62.6s): Ok, ok,
+[B] (62.6s-64.9s): los impactos que va a tener y todo eso.
+[A] (64.9s-67.2s): si entonces te llega la idea de Cristian.
+```
+
+**After (improved):**
+```
+[A] (60.8s-71.0s): Ok, entonces te llega la idea de Cristian. Cristian, ¿qué te entrega?
+
+[B] (71.6s-80.2s): Él debería entregar la cadena de valor. La cadena de valor contiene objetivos, actividades y el enfoque del proyecto.
+```
+
 ## Known Limitations
 
 - OpenAI API has a 25MB file size limit (handled automatically)
@@ -60,3 +105,57 @@ This project includes Claude Code hooks (`.claude/claude-hooks.js`) that prevent
 
 - Audio file transcription (M4A format support)
 - Multiple LLM provider support (OpenRouter, OpenAI)
+
+## VPS Remoto (Hostinger)
+
+**Conexión SSH**: `root@72.62.138.164`
+
+**Rutas importantes**:
+- Código en VPS: `/root/transcriptor/`
+- Outputs en VPS: `/root/transcriptor/outputs/`
+- Audios a procesar: `/root/transcriptor/mp3/`
+
+**Comandos útiles**:
+```bash
+# Migrar transcripciones del VPS a local
+rsync -avz root@72.62.138.164:/root/transcriptor/outputs/ /Users/daniel/Desktop/Dev/transcriptor/outputs/
+
+# Subir audios al VPS
+rsync -avz /Users/daniel/Desktop/Dev/transcriptor/mp3/ root@72.62.138.164:/root/transcriptor/mp3/
+
+# Conectar al VPS
+ssh root@72.62.138.164
+
+# Verificar si hay procesos de transcripción corriendo
+ps aux | grep python
+```
+
+**Gestión de Screen**:
+```bash
+# Listar screens activas
+screen -ls
+
+# Eliminar una screen específica (reemplazar ID)
+screen -X -S <ID>.transcriptor quit
+
+# Crear nueva screen
+screen -S transcriptor
+
+# Reconectar a screen existente
+screen -r transcriptor
+
+# Salir de screen sin detener el proceso: Ctrl+A, luego D
+```
+
+**Notificaciones Telegram**:
+- Bot: @transcriptor_not_bot
+- Token: `8225868235:AAGVM_M82WePZUiqWEFYiWaMM-YXlPDhPTM`
+- Chat ID: `94135603`
+
+```bash
+# Ejecutar transcriptor con notificación (éxito o error)
+cd /root/transcriptor && venv/bin/python src/transcriptor.py && curl -s "https://api.telegram.org/bot8225868235:AAGVM_M82WePZUiqWEFYiWaMM-YXlPDhPTM/sendMessage" -d "chat_id=94135603" -d "text=✅ Transcripción completada" || curl -s "https://api.telegram.org/bot8225868235:AAGVM_M82WePZUiqWEFYiWaMM-YXlPDhPTM/sendMessage" -d "chat_id=94135603" -d "text=❌ Error en transcripción"
+
+# Test de notificación Telegram
+curl -s "https://api.telegram.org/bot8225868235:AAGVM_M82WePZUiqWEFYiWaMM-YXlPDhPTM/sendMessage" -d "chat_id=94135603" -d "text=🔔 Test"
+```
