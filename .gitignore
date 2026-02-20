@@ -210,3 +210,10 @@ __marimo__/
 #Ignore vscode AI rules
 .github/instructions/codacy.instructions.md
 PRIVATE.md
+
+# Audio files and transcription outputs (datos privados)
+mp3/
+outputs/
+
+# macOS
+.DS_Store
